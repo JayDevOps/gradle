@@ -139,21 +139,6 @@ public class GenerateXcodeProjectFileTask extends DefaultTask {
             throw UncheckedException.throwAsUncheckedException(e);
         }
 
-        File workspaceSettingsFile = new File(xcodeprojDir, "project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings");
-        workspaceSettingsFile.getParentFile().mkdirs();
-        try {
-            Writer writer = new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(workspaceSettingsFile)), "UTF-8");
-            try {
-                String content = work();
-                writer.write(content);
-                writer.flush();
-            } finally {
-                writer.close();
-            }
-        } catch (IOException e) {
-            throw UncheckedException.throwAsUncheckedException(e);
-        }
-
         File usersettingFile = new File(xcodeprojDir, "xcuserdata/" + System.getProperty("user.name") + ".xcuserdatad/xcschemes/xcschememanagement.plist");
         usersettingFile.getParentFile().mkdirs();
         try {
@@ -168,17 +153,6 @@ public class GenerateXcodeProjectFileTask extends DefaultTask {
         } catch (IOException e) {
             throw UncheckedException.throwAsUncheckedException(e);
         }
-    }
-
-    private String work() {
-        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-            "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n" +
-            "<plist version=\"1.0\">\n" +
-            "<dict>\n" +
-            "\t<key>IDEWorkspaceSharedSettings_AutocreateContextsIfNeeded</key>\n" +
-            "\t<false/>\n" +
-            "</dict>\n" +
-            "</plist>";
     }
 
     private String usertargetman(String id, String id_index) {

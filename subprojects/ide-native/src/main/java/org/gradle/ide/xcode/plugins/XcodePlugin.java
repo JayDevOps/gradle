@@ -18,6 +18,7 @@ package org.gradle.ide.xcode.plugins;
 
 import org.gradle.api.Action;
 import org.gradle.api.Project;
+import org.gradle.ide.xcode.tasks.GenerateWorkspaceSettingsFileTask;
 import org.gradle.ide.xcode.tasks.GenerateXcodeProjectFileTask;
 import org.gradle.language.swift.plugins.SwiftExecutablePlugin;
 import org.gradle.plugins.ide.internal.IdePlugin;
@@ -58,6 +59,12 @@ public class XcodePlugin extends IdePlugin {
         if (isRoot(project)) {
             GenerateXcodeProjectFileTask task = project.getTasks().create("pbxProject", GenerateXcodeProjectFileTask.class);
 
+
+            GenerateWorkspaceSettingsFileTask workspaceSettingsFileTask = project.getTasks().create("workspaceSettings", GenerateWorkspaceSettingsFileTask.class);
+            workspaceSettingsFileTask.setAutoCreateContextsIfNeeded(false);
+            workspaceSettingsFileTask.setOutputFile(project.file("app.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings"));
+
+            addWorker(workspaceSettingsFileTask);
             addWorker(task);
         }
     }

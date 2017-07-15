@@ -196,6 +196,9 @@ libraries.awsS3 = [
 // keep in sync with ScalaLanguagePlugin code
 libraries.zinc = 'com.typesafe.zinc:zinc:0.3.13'
 
+// for XCode IDE integration support
+libraries.plist = "com.googlecode.plist:dd-plist:1.19"
+
 allprojects {
     configurations.all {
         resolutionStrategy.eachDependency { details ->
