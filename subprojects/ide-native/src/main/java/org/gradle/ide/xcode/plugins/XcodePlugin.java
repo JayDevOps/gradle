@@ -67,25 +67,7 @@ public class XcodePlugin extends IdePlugin {
             workspaceSettingsFileTask.setAutoCreateContextsIfNeeded(false);
             workspaceSettingsFileTask.setOutputFile(project.file("app.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings"));
             addWorker(workspaceSettingsFileTask);
-
-            GenerateSchemeManagementFileTask sharedSchemeManagementFileTask = project.getTasks().create("sharedSchemeManagement", GenerateSchemeManagementFileTask.class);
-            sharedSchemeManagementFileTask.getXcodeSchemes().add(newScheme("target11.xcscheme", true));
-            sharedSchemeManagementFileTask.getXcodeSchemes().add(newScheme("[indexing] DO NOT BUILD target11.xcscheme", false));
-            sharedSchemeManagementFileTask.setOutputFile(project.file("app.xcodeproj/xcshareddata/xcschemes/xcschememanagement.plist"));
-            addWorker(sharedSchemeManagementFileTask);
-
-            GenerateSchemeManagementFileTask userSchemeManagementFileTask = project.getTasks().create("userSchemeManagement", GenerateSchemeManagementFileTask.class);
-            userSchemeManagementFileTask.getXcodeSchemes().add(newScheme("target11.xcscheme_^#shared#^_", true));
-            userSchemeManagementFileTask.getXcodeSchemes().add(newScheme("[indexing] DO NOT BUILD target11.xcscheme_^#shared#^_", false));
-            userSchemeManagementFileTask.setOutputFile(project.file("app.xcodeproj/xcuserdata/" + System.getProperty("user.name") + ".xcuserdatad/xcschemes/xcschememanagement.plist"));
-            addWorker(userSchemeManagementFileTask);
         }
-    }
-
-    private static XcodeScheme newScheme(String name, boolean visible) {
-        XcodeScheme result = new DefaultXcodeScheme(name);
-        result.setVisible(visible);
-        return result;
     }
 
     private static boolean isRoot(Project project) {

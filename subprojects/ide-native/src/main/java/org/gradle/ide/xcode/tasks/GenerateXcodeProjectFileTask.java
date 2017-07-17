@@ -112,19 +112,6 @@ public class GenerateXcodeProjectFileTask extends DefaultTask {
         } catch (IOException e) {
             throw UncheckedException.throwAsUncheckedException(e);
         }
-
-        try {
-            Writer writer = new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(new File(xcodeprojDir, "xcshareddata/xcschemes/[indexing] DO NOT BUILD target11.xcscheme"))), "UTF-8");
-            try {
-                String content = targetXcshemeContent("[indexing] DO NOT BUILD target11", index_target11.getGlobalID(), getProject().getName() + "xcodeproj", "");
-                writer.write(content);
-                writer.flush();
-            } finally {
-                writer.close();
-            }
-        } catch (IOException e) {
-            throw UncheckedException.throwAsUncheckedException(e);
-        }
     }
 
     private String targetXcshemeContentNotIndex(String targetName, String id, String projectFilename, String executablePath) {
@@ -185,93 +172,6 @@ public class GenerateXcodeProjectFileTask extends DefaultTask {
             "      savedToolIdentifier = \"\"\n" +
             "      useCustomWorkingDirectory = \"NO\"\n" +
             "      debugDocumentVersioning = \"YES\">\n" +
-            "   </ProfileAction>\n" +
-            "   <AnalyzeAction\n" +
-            "      buildConfiguration = \"Debug\">\n" +
-            "   </AnalyzeAction>\n" +
-            "   <ArchiveAction\n" +
-            "      buildConfiguration = \"Debug\"\n" +
-            "      revealArchiveInOrganizer = \"YES\">\n" +
-            "   </ArchiveAction>\n" +
-            "</Scheme>";
-    }
-
-    private String targetXcshemeContent(String targetName, String id, String projectFilename, String executablePath) {
-        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-            "<Scheme\n" +
-            "   LastUpgradeVersion = \"0830\"\n" +
-            "   version = \"1.3\">\n" +
-            "   <BuildAction\n" +
-            "      parallelizeBuildables = \"YES\"\n" +
-            "      buildImplicitDependencies = \"YES\">\n" +
-            "      <BuildActionEntries>\n" +
-            "         <BuildActionEntry\n" +
-            "            buildForTesting = \"YES\"\n" +
-            "            buildForRunning = \"YES\"\n" +
-            "            buildForProfiling = \"YES\"\n" +
-            "            buildForArchiving = \"YES\"\n" +
-            "            buildForAnalyzing = \"YES\">\n" +
-            "            <BuildableReference\n" +
-            "               BuildableIdentifier = \"primary\"\n" +
-            "               BlueprintIdentifier = \"" + id + "\"\n" +
-            "               BuildableName = \"" + targetName + "\"\n" +
-            "               BlueprintName = \"" + targetName + "\"\n" +
-            "               ReferencedContainer = \"container:" + projectFilename + "\">\n" +
-            "            </BuildableReference>\n" +
-            "         </BuildActionEntry>\n" +
-            "      </BuildActionEntries>\n" +
-            "   </BuildAction>\n" +
-            "   <TestAction\n" +
-            "      buildConfiguration = \"Debug\"\n" +
-            "      selectedDebuggerIdentifier = \"Xcode.DebuggerFoundation.Debugger.LLDB\"\n" +
-            "      selectedLauncherIdentifier = \"Xcode.DebuggerFoundation.Launcher.LLDB\"\n" +
-            "      shouldUseLaunchSchemeArgsEnv = \"YES\">\n" +
-            "      <Testables>\n" +
-            "      </Testables>\n" +
-            "      <AdditionalOptions>\n" +
-            "      </AdditionalOptions>\n" +
-            "   </TestAction>\n" +
-            "   <LaunchAction\n" +
-            "      buildConfiguration = \"Debug\"\n" +
-            "      selectedDebuggerIdentifier = \"Xcode.DebuggerFoundation.Debugger.LLDB\"\n" +
-            "      selectedLauncherIdentifier = \"Xcode.DebuggerFoundation.Launcher.LLDB\"\n" +
-            "      launchStyle = \"0\"\n" +
-            "      useCustomWorkingDirectory = \"NO\"\n" +
-            "      ignoresPersistentStateOnLaunch = \"NO\"\n" +
-            "      debugDocumentVersioning = \"YES\"\n" +
-            "      debugServiceExtension = \"internal\"\n" +
-            "      allowLocationSimulation = \"YES\">\n" +
-            "      <PathRunnable\n" +
-            "         runnableDebuggingMode = \"0\"\n" +
-            "         FilePath = \"" + executablePath + "\">\n" +
-            "      </PathRunnable>\n" +
-            "      <MacroExpansion>\n" +
-            "         <BuildableReference\n" +
-            "            BuildableIdentifier = \"primary\"\n" +
-            "            BlueprintIdentifier = \"" + id + "\"\n" +
-            "            BuildableName = \"" + targetName + "\"\n" +
-            "            BlueprintName = \"" + targetName + "\"\n" +
-            "            ReferencedContainer = \"container:" + projectFilename + "\">\n" +
-            "         </BuildableReference>\n" +
-            "      </MacroExpansion>\n" +
-            "      <AdditionalOptions>\n" +
-            "      </AdditionalOptions>\n" +
-            "   </LaunchAction>\n" +
-            "   <ProfileAction\n" +
-            "      buildConfiguration = \"Debug\"\n" +
-            "      shouldUseLaunchSchemeArgsEnv = \"YES\"\n" +
-            "      savedToolIdentifier = \"\"\n" +
-            "      useCustomWorkingDirectory = \"NO\"\n" +
-            "      debugDocumentVersioning = \"YES\">\n" +
-            "      <MacroExpansion>\n" +
-            "         <BuildableReference\n" +
-            "            BuildableIdentifier = \"primary\"\n" +
-            "            BlueprintIdentifier = \"" + id + "\"\n" +
-            "            BuildableName = \"" + targetName + "\"\n" +
-            "            BlueprintName = \"" + targetName + "\"\n" +
-            "            ReferencedContainer = \"container:" + projectFilename + "\">\n" +
-            "         </BuildableReference>\n" +
-            "      </MacroExpansion>\n" +
             "   </ProfileAction>\n" +
             "   <AnalyzeAction\n" +
             "      buildConfiguration = \"Debug\">\n" +
