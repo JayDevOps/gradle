@@ -18,6 +18,12 @@ package org.gradle.ide.xcode;
 
 import org.gradle.api.Incubating;
 import org.gradle.api.Named;
+import org.gradle.ide.xcode.tasks.internal.XcodeSchemeFile;
+import org.gradle.process.ExecSpec;
+import org.gradle.process.ProcessForkOptions;
+
+import java.util.EnumSet;
+import java.util.List;
 
 /**
  * @since 4.2
@@ -26,4 +32,26 @@ import org.gradle.api.Named;
 public interface XcodeScheme extends Named {
     boolean isVisible();
     void setVisible(boolean visible);
+
+    boolean isParallelizeBuild();
+    void setParallelizeBuild(boolean parallelizeBuild);
+
+    List<BuildEntry> getBuildEntries();
+
+    String getBuildConfiguration();
+    void setBuildConfiguration(String buildConfiguration);
+
+    interface BuildEntry {
+        enum BuildFor {
+            RUNNING, TESTING, PROFILING, ARCHIVING, ANALYZING;
+
+            public static final EnumSet<BuildFor> DEFAULT = EnumSet.allOf(BuildFor.class);
+            public static final EnumSet<BuildFor> INDEXING = EnumSet.of(TESTING, ANALYZING, ARCHIVING);
+            public static final EnumSet<BuildFor> TEST_ONLY = EnumSet.of(TESTING, ANALYZING);
+        }
+
+        XcodeTarget getTarget();
+
+        EnumSet<BuildFor> getBuildFor();
+    }
 }

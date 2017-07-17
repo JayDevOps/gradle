@@ -18,9 +18,16 @@ package org.gradle.ide.xcode.internal;
 
 import org.gradle.ide.xcode.XcodeScheme;
 
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+
 public class DefaultXcodeScheme implements XcodeScheme {
     private final String name;
     private boolean visible;
+    private boolean parallelizeBuild;
+    private List<BuildEntry> buildEntries = new ArrayList<BuildEntry>();
+    private String buildConfiguration;
 
     public DefaultXcodeScheme(String name) {
         this.name = name;
@@ -37,7 +44,52 @@ public class DefaultXcodeScheme implements XcodeScheme {
     }
 
     @Override
+    public boolean isParallelizeBuild() {
+        return parallelizeBuild;
+    }
+
+    @Override
+    public void setParallelizeBuild(boolean parallelizeBuild) {
+        this.parallelizeBuild = parallelizeBuild;
+    }
+
+    @Override
+    public List<BuildEntry> getBuildEntries() {
+        return buildEntries;
+    }
+
+    @Override
+    public String getBuildConfiguration() {
+        return buildConfiguration;
+    }
+
+    @Override
+    public void setBuildConfiguration(String buildConfiguration) {
+        this.buildConfiguration = buildConfiguration;
+    }
+
+    @Override
     public String getName() {
         return name;
+    }
+
+    public static class DefaultBuildEntry implements BuildEntry {
+        private final DefaultXcodeTarget target;
+        private final EnumSet<BuildFor> buildFor;
+
+        public DefaultBuildEntry(DefaultXcodeTarget target, EnumSet<BuildFor> buildFor) {
+            this.target = target;
+            this.buildFor = buildFor;
+        }
+
+        @Override
+        public DefaultXcodeTarget getTarget() {
+            return target;
+        }
+
+        @Override
+        public EnumSet<BuildFor> getBuildFor() {
+            return buildFor;
+        }
     }
 }

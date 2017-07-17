@@ -40,14 +40,14 @@ public class GenerateSchemeManagementFileTask extends PropertyListGeneratorTask<
 //    }
 
     @Override
-    protected void configure(XcodeSchemeManagementFile settingsFile) {
+    protected void configure(XcodeSchemeManagementFile schemeManagementFile) {
         int orderHint = 0;
         for (XcodeScheme scheme : xcodeSchemes) {
             XcodeSchemeManagementFile.SchemeUserState state = new XcodeSchemeManagementFile.SchemeUserState();
             state.setVisible(scheme.isVisible());
             state.setOrderHint(orderHint++);
 
-            settingsFile.getSchemeUserStates().put(scheme.getName(), state);
+            schemeManagementFile.getSchemeUserStates().put(scheme.getName(), state);
         }
     }
 
