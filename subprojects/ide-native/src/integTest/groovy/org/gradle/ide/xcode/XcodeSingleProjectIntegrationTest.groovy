@@ -40,7 +40,7 @@ rootProject.name = "app"
         succeeds("xcode")
 
         then:
-        executedAndNotSkipped(":pbxProject", ":xcode")
+        executedAndNotSkipped(":xcodeProject", ":xcodeScheme", ":xcodeWorkspaceSettings", ":xcode")
         xcodeProject("app.xcodeproj").projectFile.mainGroup.children.size() == 5
 
     }

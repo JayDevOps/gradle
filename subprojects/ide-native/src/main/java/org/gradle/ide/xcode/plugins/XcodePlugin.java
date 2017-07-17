@@ -76,16 +76,17 @@ public class XcodePlugin extends IdePlugin {
         if (isRoot(project)) {
             XcodeProject proj = newProject(project);
 
-            GenerateXcodeProjectFileTask task = project.getTasks().create("pbxProject", GenerateXcodeProjectFileTask.class);
-            task.setProject(proj);
-            getLifecycleTask().dependsOn(task);
+            GenerateXcodeProjectFileTask projectFileTask = project.getTasks().create("xcodeProject", GenerateXcodeProjectFileTask.class);
+            projectFileTask.setProject(proj);
+            projectFileTask.setOutputFile(project.file("app.xcodeproj/project.pbxproj"));
+            getLifecycleTask().dependsOn(projectFileTask);
 
-            GenerateWorkspaceSettingsFileTask workspaceSettingsFileTask = project.getTasks().create("workspaceSettings", GenerateWorkspaceSettingsFileTask.class);
+            GenerateWorkspaceSettingsFileTask workspaceSettingsFileTask = project.getTasks().create("xcodeWorkspaceSettings", GenerateWorkspaceSettingsFileTask.class);
             workspaceSettingsFileTask.setAutoCreateContextsIfNeeded(false);
             workspaceSettingsFileTask.setOutputFile(project.file("app.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings"));
             getLifecycleTask().dependsOn(workspaceSettingsFileTask);
 
-            GenerateSchemeFileTask schemeFileTask = project.getTasks().create("scheme", GenerateSchemeFileTask.class);
+            GenerateSchemeFileTask schemeFileTask = project.getTasks().create("xcodeScheme", GenerateSchemeFileTask.class);
             schemeFileTask.setScheme(proj.getSchemes().get(0));
             schemeFileTask.setOutputFile(project.file("app.xcodeproj/xcshareddata/xcschemes/target11.xcscheme"));
             getLifecycleTask().dependsOn(schemeFileTask);
