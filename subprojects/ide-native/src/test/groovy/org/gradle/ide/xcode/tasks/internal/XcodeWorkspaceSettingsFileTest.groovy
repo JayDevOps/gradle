@@ -34,7 +34,7 @@ class XcodeWorkspaceSettingsFileTest extends Specification {
         generator.loadDefaults()
     }
 
-    def "empty project file"() {
+    def "empty workspace settings file"() {
         expect:
         workspaceSettingsFile.assertMissingAutoCreateContextsIfNeeded()
     }
