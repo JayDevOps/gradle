@@ -18,9 +18,6 @@ package org.gradle.ide.xcode;
 
 import org.gradle.api.Incubating;
 import org.gradle.api.Named;
-import org.gradle.ide.xcode.tasks.internal.XcodeSchemeFile;
-import org.gradle.process.ExecSpec;
-import org.gradle.process.ProcessForkOptions;
 
 import java.util.EnumSet;
 import java.util.List;

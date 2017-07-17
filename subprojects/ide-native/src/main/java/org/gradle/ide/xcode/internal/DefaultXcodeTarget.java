@@ -17,7 +17,6 @@
 package org.gradle.ide.xcode.internal;
 
 import org.gradle.ide.xcode.XcodeTarget;
-import org.gradle.ide.xcode.tasks.internal.XcodeSchemeFile;
 
 import java.io.File;
 

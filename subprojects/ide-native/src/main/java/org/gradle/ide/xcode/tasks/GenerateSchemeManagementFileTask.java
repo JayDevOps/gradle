@@ -35,10 +35,6 @@ public class GenerateSchemeManagementFileTask extends PropertyListGeneratorTask<
         return xcodeSchemes;
     }
 
-//    public void setXcodeScheme(XcodeScheme xcodeScheme) {
-//        this.xcodeScheme = xcodeScheme;
-//    }
-
     @Override
     protected void configure(XcodeSchemeManagementFile schemeManagementFile) {
         int orderHint = 0;
