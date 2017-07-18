@@ -16,17 +16,10 @@
 
 package org.gradle.ide.xcode;
 
-import org.gradle.api.NamedDomainObjectContainer;
-
 import java.io.File;
-import java.util.List;
+import java.util.Set;
 
-public interface XcodeProject {
-    File getLocation();
-    void setLocation(File location);  // TODO - use Object instead of file
-
-    List<XcodeTarget> getTargets();
-    NamedDomainObjectContainer<XcodeScheme> getSchemes();
-
-
+public interface XcodeIndexingTarget extends XcodeTarget {
+    Set<File> getSources();
+    void setSources(Set<File> sources);
 }

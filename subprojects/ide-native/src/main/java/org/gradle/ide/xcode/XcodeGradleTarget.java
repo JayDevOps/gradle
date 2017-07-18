@@ -16,17 +16,10 @@
 
 package org.gradle.ide.xcode;
 
-import org.gradle.api.NamedDomainObjectContainer;
+public interface XcodeGradleTarget extends XcodeTarget {
+    String getTaskName();
+    void setTaskName(String taskName);
 
-import java.io.File;
-import java.util.List;
-
-public interface XcodeProject {
-    File getLocation();
-    void setLocation(File location);  // TODO - use Object instead of file
-
-    List<XcodeTarget> getTargets();
-    NamedDomainObjectContainer<XcodeScheme> getSchemes();
-
-
+    String getGradleCommand();
+    void setGradleCommand(String gradleCommand);
 }

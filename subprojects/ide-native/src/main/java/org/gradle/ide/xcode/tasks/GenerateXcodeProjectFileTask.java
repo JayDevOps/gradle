@@ -31,18 +31,30 @@ import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.google.common.base.Optional;
 import org.gradle.api.Action;
 import org.gradle.api.file.ConfigurableFileTree;
+import org.gradle.ide.xcode.XcodeGradleTarget;
+import org.gradle.ide.xcode.XcodeIndexingTarget;
 import org.gradle.ide.xcode.XcodeProject;
+import org.gradle.ide.xcode.XcodeTarget;
+import org.gradle.ide.xcode.internal.DefaultXcodeGradleTarget;
+import org.gradle.ide.xcode.internal.DefaultXcodeIndexingTarget;
+import org.gradle.ide.xcode.internal.DefaultXcodeProject;
 import org.gradle.ide.xcode.internal.DefaultXcodeTarget;
+import org.gradle.ide.xcode.internal.XcodeTargetInternal;
 import org.gradle.ide.xcode.tasks.internal.XcodeProjectFile;
 import org.gradle.plugins.ide.api.PropertyListGeneratorTask;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class GenerateXcodeProjectFileTask extends PropertyListGeneratorTask<XcodeProjectFile> {
-    private XcodeProject project;
+    private DefaultXcodeProject project;
+    private Map<String, PBXFileReference> pathToFileReference = new HashMap<String, PBXFileReference>();
+
+    private static final String PRODUCTS_GROUP_NAME = "Products";
 
     @Override
     protected void configure(XcodeProjectFile projectFile) {
@@ -51,33 +63,26 @@ public class GenerateXcodeProjectFileTask extends PropertyListGeneratorTask<Xcod
 
         // Required for making think the project isn't corrupted...
         // TODO - create according to buildTypes container
-        XCBuildConfiguration c = project.getBuildConfigurationList().getBuildConfigurationsByName().getUnchecked("Debug");
-        c.setBuildSettings(new NSDictionary());
+        XCBuildConfiguration buildConfiguration = project.getBuildConfigurationList().getBuildConfigurationsByName().getUnchecked("Debug");
+        buildConfiguration.setBuildSettings(new NSDictionary());
 
-
-        ConfigurableFileTree sources = getProject().fileTree("src/main/swift");
-        List<PBXReference> fileReferences = new ArrayList<PBXReference>();
-        for (File source : sources.getFiles()) {
+        for (File source : this.project.getSources()) {
             PBXFileReference fileReference = new PBXFileReference(source.getName(), source.getAbsolutePath(), PBXReference.SourceTree.ABSOLUTE);
-            fileReferences.add(fileReference);
+            pathToFileReference.put(source.getAbsolutePath(), fileReference);
             project.getMainGroup().getChildren().add(fileReference);
         }
-        if (getProject().getBuildFile().exists()) {
-            project.getMainGroup().getChildren().add(new PBXFileReference(getProject().getBuildFile().getName(), getProject().getBuildFile().getAbsolutePath(), PBXReference.SourceTree.ABSOLUTE));
+
+        for (XcodeTarget target : this.project.getTargets()) {
+            project.getTargets().add(toPbxTarget(target));
+
+            if (target instanceof XcodeGradleTarget) {
+                XcodeTargetInternal targetInternal = (XcodeTargetInternal) target;
+                PBXFileReference fileReference = new PBXFileReference(target.getOutputFile().getName(), target.getOutputFile().getAbsolutePath(), PBXReference.SourceTree.ABSOLUTE);
+                fileReference.setExplicitFileType(Optional.of(targetInternal.getOutputFileType().identifier));
+                project.getMainGroup().getOrCreateChildGroupByName(PRODUCTS_GROUP_NAME).getChildren().add(fileReference);
+            }
         }
 
-        // TODO - create a target per component
-        PBXTarget index_target11 = createIndexingTarget("[indexing] DO NOT BUILD target11", getProject().getName(), fileReferences);
-        project.getTargets().add(index_target11);
-        PBXTarget target11 = createTarget("target11", getProject().getName(), ":linkMain", ((DefaultXcodeTarget)this.project.getTargets().get(0)).getId());
-        project.getTargets().add(target11);
-
-        PBXFileReference f = new PBXFileReference(getProject().getName(), getProject().file("build/exe/app").getAbsolutePath(), PBXReference.SourceTree.ABSOLUTE);
-        f.setExplicitFileType(Optional.of("compiled.mach-o.executable"));
-        project.getMainGroup().getOrCreateChildGroupByName("Products").getChildren().add(f);
-
-        // Serialize the model
-        // TODO - Write the pipeworks to use GeneratorTask
         XcodeprojSerializer serializer = new XcodeprojSerializer(new GidGenerator(Collections.<String>emptySet()), project);
         final NSDictionary rootObject = serializer.toPlist();
 
@@ -95,48 +100,50 @@ public class GenerateXcodeProjectFileTask extends PropertyListGeneratorTask<Xcod
         return new XcodeProjectFile(getPropertyListTransformer());
     }
 
-    /**
-     *
-     * @param name name of the component (project)
-     * @param productName the baseName of a component
-     * @param taskName should be the lifecycle task of the binary to build
-     * @return
-     */
-    private PBXLegacyTarget createTarget(String name, String productName, String taskName, String gid) {
-        PBXLegacyTarget target = new PBXLegacyTarget(name, PBXTarget.ProductType.TOOL);
-        target.setProductName(productName);
-        NSDictionary buildSettings = new NSDictionary();
-        target.getBuildConfigurationList().getBuildConfigurationsByName().getUnchecked("Debug").setBuildSettings(buildSettings);
-
-        if (getProject().file("gradlew").exists()) {
-            target.setBuildToolPath(getProject().file("gradlew").getAbsolutePath());
-        } else {
-            // TODO - default to gradle on the path (or should we generate an error if no gradle is in the path?)
-            target.setBuildToolPath("/Users/daniel/gradle/gradle-source-build/bin/gradle");
+    private PBXTarget toPbxTarget(XcodeTarget target) {
+        if (target instanceof XcodeIndexingTarget) {
+            return toPbxTarget((DefaultXcodeIndexingTarget) target);
+        } else if (target instanceof XcodeGradleTarget) {
+            return toPbxTarget((DefaultXcodeGradleTarget) target);
         }
-        target.setBuildArgumentsString(taskName);
-        target.setGlobalID(gid);
+
+        throw new IllegalArgumentException("XCode target need to be of type XcodeIndexingTarget or XcodeGradleTarget");
+    }
+
+    private PBXTarget toPbxTarget(DefaultXcodeGradleTarget xcodeTarget) {
+        PBXLegacyTarget target = new PBXLegacyTarget(xcodeTarget.getName(), xcodeTarget.getProductType());
+        target.setProductName(xcodeTarget.getProductName());
+
+        NSDictionary buildSettings = new NSDictionary();
+
+        target.getBuildConfigurationList().getBuildConfigurationsByName().getUnchecked("Debug").setBuildSettings(buildSettings);
+        target.setBuildToolPath(xcodeTarget.getGradleCommand());
+        target.setBuildArgumentsString(xcodeTarget.getTaskName());
+        target.setGlobalID(xcodeTarget.getId());
 
         return target;
     }
 
-    private PBXNativeTarget createIndexingTarget(String name, String productName, List<PBXReference> fileReferences) {
-        PBXSourcesBuildPhase p = new PBXSourcesBuildPhase();
-        for (PBXReference fileReference : fileReferences) {
-            p.getFiles().add(new PBXBuildFile(fileReference));
+    private PBXTarget toPbxTarget(DefaultXcodeIndexingTarget xcodeTarget) {
+        PBXSourcesBuildPhase buildPhase = new PBXSourcesBuildPhase();
+        for (File file : xcodeTarget.getSources()) {
+            PBXFileReference fileReference = pathToFileReference.get(file.getAbsolutePath());
+            buildPhase.getFiles().add(new PBXBuildFile(fileReference));
         }
 
-        PBXNativeTarget target = new PBXNativeTarget(name, PBXTarget.ProductType.TOOL);
+        PBXNativeTarget target = new PBXNativeTarget(xcodeTarget.getName(), xcodeTarget.getProductType());
+
         NSDictionary buildSettings = new NSDictionary();
         buildSettings.put("SWIFT_VERSION", "3.0");  // TODO - Choose the right version for swift
-        buildSettings.put("PRODUCT_NAME", productName);  // Mandatory
+        buildSettings.put("PRODUCT_NAME", xcodeTarget.getProductName());  // Mandatory
+
         target.getBuildConfigurationList().getBuildConfigurationsByName().getUnchecked("Debug").setBuildSettings(buildSettings);
-        target.getBuildPhases().add(p);
+        target.getBuildPhases().add(buildPhase);
 
         return target;
     }
 
     public void setProject(XcodeProject project) {
-        this.project = project;
+        this.project = (DefaultXcodeProject) project;
     }
 }

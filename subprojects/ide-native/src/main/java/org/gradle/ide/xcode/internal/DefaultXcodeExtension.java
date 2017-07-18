@@ -14,19 +14,24 @@
  * limitations under the License.
  */
 
-package org.gradle.ide.xcode;
+package org.gradle.ide.xcode.internal;
 
-import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.internal.file.FileResolver;
+import org.gradle.ide.xcode.XcodeExtension;
+import org.gradle.internal.reflect.Instantiator;
 
-import java.io.File;
-import java.util.List;
+import javax.inject.Inject;
 
-public interface XcodeProject {
-    File getLocation();
-    void setLocation(File location);  // TODO - use Object instead of file
+public class DefaultXcodeExtension implements XcodeExtension {
+    private final DefaultXcodeProject project;
 
-    List<XcodeTarget> getTargets();
-    NamedDomainObjectContainer<XcodeScheme> getSchemes();
+    @Inject
+    public DefaultXcodeExtension(Instantiator instantiator, FileResolver fileResolver) {
+        this.project = instantiator.newInstance(DefaultXcodeProject.class, instantiator, fileResolver);
+    }
 
-
+    @Override
+    public DefaultXcodeProject getProject() {
+        return project;
+    }
 }
