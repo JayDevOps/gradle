@@ -23,7 +23,7 @@ import java.util.List;
 
 public interface XcodeProject {
     File getLocation();
-    void setLocation(File location);  // TODO - use Object instead of file
+    void setLocation(File location);
 
     List<XcodeTarget> getTargets();
     NamedDomainObjectContainer<XcodeScheme> getSchemes();

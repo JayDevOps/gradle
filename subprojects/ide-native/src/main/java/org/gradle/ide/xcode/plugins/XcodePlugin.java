@@ -17,9 +17,12 @@
 package org.gradle.ide.xcode.plugins;
 
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.google.common.collect.Sets;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileTree;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.RegularFileVar;
 import org.gradle.api.internal.file.FileResolver;
 import org.gradle.api.tasks.Delete;
 import org.gradle.ide.xcode.XcodeExtension;
@@ -42,6 +45,7 @@ import org.gradle.plugins.ide.internal.IdePlugin;
 import javax.inject.Inject;
 import java.io.File;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 public class XcodePlugin extends IdePlugin {
     private final Instantiator instantiator;
@@ -64,9 +68,8 @@ public class XcodePlugin extends IdePlugin {
         getLifecycleTask().setDescription("Generates XCode project files (pbxproj, xcworkspace, xcscheme)");
         getCleanTask().setDescription("Cleans XCode project files (xcodeproj)");
 
-        configureXcodeCleanTask(project);
-
         xcode = project.getExtensions().create("xcode", DefaultXcodeExtension.class, instantiator, fileResolver);
+        xcode.getProject().setLocation(project.file(project.getName() + ".xcodeproj"));
 
 //        configureIdeaWorkspace(project);
         configureXcodeProject(project);
@@ -76,38 +79,61 @@ public class XcodePlugin extends IdePlugin {
 //        configureForScalaPlugin();
 //        registerImlArtifact(project);
 //        linkCompositeBuildDependencies((ProjectInternal) project);
+
+        configureXcodeCleanTask(project);
     }
 
     private void configureXcodeCleanTask(Project project) {
         Delete cleanTask = project.getTasks().create("cleanXcodeProject", Delete.class);
-        cleanTask.delete(project.file("app.xcodeproj"));
-//        cleanTask.conventionMapping("delete", new Callable<Set<Object>>() {
-//            @Override
-//            public Set<Object> call() throws Exception {
-//                return Sets.newHashSet((Object) xcode.getProject().getLocation());
-//            }
-//        });
+        // TODO - Use provider API instead of convention mapping
+        cleanTask.setDelete(project.provider(new Callable<Set<Object>>() {
+            @Override
+            public Set<Object> call() throws Exception {
+                return Sets.newHashSet((Object) xcode.getProject().getLocation());
+            }
+        }));
         getCleanTask().dependsOn(cleanTask);
     }
 
     private void configureXcodeProject(final Project project) {
         GenerateXcodeProjectFileTask projectFileTask = project.getTasks().create("xcodeProject", GenerateXcodeProjectFileTask.class);
         projectFileTask.setProject(xcode.getProject());
-        projectFileTask.setOutputFile(project.file("app.xcodeproj/project.pbxproj"));
+        projectFileTask.setOutputFile(project.provider(new Callable<RegularFile>() {
+            @Override
+            public RegularFile call() throws Exception {
+                RegularFileVar result = project.getLayout().newFileVar();
+                result.set(new File(xcode.getProject().getLocation(), "project.pbxproj"));
+                return result.get();
+            }
+        }));
         getLifecycleTask().dependsOn(projectFileTask);
 
         GenerateWorkspaceSettingsFileTask workspaceSettingsFileTask = project.getTasks().create("xcodeWorkspaceSettings", GenerateWorkspaceSettingsFileTask.class);
         workspaceSettingsFileTask.setAutoCreateContextsIfNeeded(false);
-        workspaceSettingsFileTask.setOutputFile(project.file("app.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings"));
+        workspaceSettingsFileTask.setOutputFile(project.provider(new Callable<RegularFile>() {
+            @Override
+            public RegularFile call() throws Exception {
+                RegularFileVar result = project.getLayout().newFileVar();
+                result.set(new File(xcode.getProject().getLocation(), "project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings"));
+                return result.get();
+            }
+        }));
         getLifecycleTask().dependsOn(workspaceSettingsFileTask);
 
         xcode.getProject().getSchemes().all(new Action<XcodeScheme>() {
             @Override
-            public void execute(XcodeScheme scheme) {
+            public void execute(final XcodeScheme scheme) {
                 // TODO - Ensure scheme.getName() give something sensible
                 GenerateSchemeFileTask schemeFileTask = project.getTasks().create("xcodeScheme" + scheme.getName(), GenerateSchemeFileTask.class);
                 schemeFileTask.setScheme(scheme);
-                schemeFileTask.setOutputFile(project.file("app.xcodeproj/xcshareddata/xcschemes/" + scheme.getName() + ".xcscheme"));
+                schemeFileTask.setOutputFile(project.provider(new Callable<RegularFile>() {
+                    @Override
+                    public RegularFile call() throws Exception {
+                        RegularFileVar result = project.getLayout().newFileVar();
+                        result.set(new File(xcode.getProject().getLocation(), "xcshareddata/xcschemes/" + scheme.getName() + ".xcscheme"));
+                        return result.get();
+                    }
+                }));
                 getLifecycleTask().dependsOn(schemeFileTask);
             }
         });

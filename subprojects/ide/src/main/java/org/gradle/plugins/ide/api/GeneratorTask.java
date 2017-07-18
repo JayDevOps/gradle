@@ -16,7 +16,11 @@
 package org.gradle.plugins.ide.api;
 
 import org.gradle.api.GradleException;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.RegularFileVar;
 import org.gradle.api.internal.ConventionTask;
+import org.gradle.api.internal.file.TaskFileVarFactory;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.specs.Specs;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Internal;
@@ -51,7 +55,7 @@ import java.io.File;
  */
 public class GeneratorTask<T> extends ConventionTask {
     private File inputFile;
-    private File outputFile;
+    private final RegularFileVar outputFile;
     protected final MutableActionSet<T> beforeConfigured = new MutableActionSet<T>();
     protected final MutableActionSet<T> afterConfigured = new MutableActionSet<T>();
     protected Generator<T> generator;
@@ -60,6 +64,7 @@ public class GeneratorTask<T> extends ConventionTask {
 
     public GeneratorTask() {
         getOutputs().upToDateWhen(Specs.satisfyNone());
+        outputFile = getServices().get(TaskFileVarFactory.class).newOutputFile(this);
     }
 
     @SuppressWarnings("UnusedDeclaration")
@@ -127,7 +132,7 @@ public class GeneratorTask<T> extends ConventionTask {
      */
     @OutputFile
     public File getOutputFile() {
-        return outputFile;
+        return outputFile.getAsFile().getOrNull();
     }
 
     /**
@@ -136,7 +141,17 @@ public class GeneratorTask<T> extends ConventionTask {
      * @param outputFile The output file.
      */
     public void setOutputFile(File outputFile) {
-        this.outputFile = outputFile;
+        this.outputFile.set(outputFile);
     }
 
+
+    /**
+     * Sets the output file to write the final configuration to with a {@Provider}.
+     *
+     * @param outputFile The provider to use.
+     * @since 4.2
+     */
+    public void setOutputFile(Provider<? extends RegularFile> outputFile) {
+        this.outputFile.set(outputFile);
+    }
 }

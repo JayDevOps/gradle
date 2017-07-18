@@ -23,11 +23,13 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.ConventionTask;
 import org.gradle.api.internal.file.FileResolver;
 import org.gradle.api.internal.file.delete.Deleter;
+import org.gradle.api.provider.Provider;
 import org.gradle.internal.nativeintegration.filesystem.FileSystem;
 
 import javax.inject.Inject;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 /**
  * <p>Deletes files or directories. Example:</p>
@@ -43,7 +45,7 @@ import java.util.Set;
  * this will have no effect.
  */
 public class Delete extends ConventionTask implements DeleteSpec {
-    private Set<Object> delete = new LinkedHashSet<Object>();
+    private Provider<? extends Set<Object>> delete = toFixedProvider(new LinkedHashSet<Object>());
 
     private boolean followSymlinks;
 
@@ -63,7 +65,7 @@ public class Delete extends ConventionTask implements DeleteSpec {
     protected void clean() {
         Deleter deleter = new Deleter(getFileResolver(), getFileSystem());
         final boolean innerFollowSymLinks = followSymlinks;
-        final Object[] paths = delete.toArray();
+        final Object[] paths = getDelete().toArray();
         setDidWork(deleter.delete(new Action<DeleteSpec>(){
             @Override
             public void execute(DeleteSpec deleteSpec) {
@@ -79,7 +81,7 @@ public class Delete extends ConventionTask implements DeleteSpec {
      */
     @Destroys
     public FileCollection getTargetFiles() {
-        return getProject().files(delete);
+        return getProject().files(getDelete());
     }
 
     /**
@@ -89,7 +91,7 @@ public class Delete extends ConventionTask implements DeleteSpec {
      */
     @Internal
     public Set<Object> getDelete() {
-        return delete;
+        return delete.get();
     }
 
     /**
@@ -99,6 +101,16 @@ public class Delete extends ConventionTask implements DeleteSpec {
      * @since 4.0
      */
     public void setDelete(Set<Object> targets) {
+        this.delete = toFixedProvider(targets);
+    }
+
+    /**
+     * Sets the files to be deleted by this task with a {@link Provider}.
+     *
+     * @param targets The provider to use
+     * @since 4.2
+     */
+    public void setDelete(Provider<? extends Set<Object>> targets) {
         this.delete = targets;
     }
 
@@ -108,8 +120,9 @@ public class Delete extends ConventionTask implements DeleteSpec {
      * @param target Any type of object accepted by {@link org.gradle.api.Project#files(Object...)}
      */
     public void setDelete(Object target) {
-        delete.clear();
-        this.delete.add(target);
+        Set<Object> delete = new LinkedHashSet<Object>();
+        delete.add(target);
+        this.delete = toFixedProvider(delete);
     }
 
     /**
@@ -139,9 +152,21 @@ public class Delete extends ConventionTask implements DeleteSpec {
      * @param targets Any type of object accepted by {@link org.gradle.api.Project#files(Object...)}
      */
     public Delete delete(Object... targets) {
+        Set<Object> delete = getDelete();
         for (Object target : targets) {
-            this.delete.add(target);
+            delete.add(target);
         }
+        this.delete = toFixedProvider(delete);
+
         return this;
+    }
+
+    private Provider<? extends Set<Object>> toFixedProvider(final Set<Object> targets) {
+        return getProject().provider(new Callable<Set<Object>>() {
+            @Override
+            public Set<Object> call() throws Exception {
+                return targets;
+            }
+        });
     }
 }
