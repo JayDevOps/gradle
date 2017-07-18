@@ -15,12 +15,14 @@
  */
 package org.gradle.integtests.resolve
 
+import groovy.transform.NotYetImplemented
 import org.gradle.integtests.fixtures.AbstractDependencyResolutionTest
 import spock.lang.Issue
 
 class BeforeResolveIntegrationTest extends AbstractDependencyResolutionTest {
 
     @Issue("gradle/gradle#2480")
+    @NotYetImplemented
     def "can use beforeResolve hook to modify dependency excludes"() {
         def module1 = mavenRepo.module('org.test', 'excluded-dep', '1.0').publish()
         mavenRepo.module('org.test', 'direct-dep', '1.0').dependsOn(module1).publish()
