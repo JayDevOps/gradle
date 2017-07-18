@@ -47,4 +47,6 @@ public interface ConfigurationInternal extends ResolveContext, Configuration, De
     OutgoingVariant convertToOutgoingVariant();
 
     void preventFromFurtherMutation();
+
+    void preResolve();
 }

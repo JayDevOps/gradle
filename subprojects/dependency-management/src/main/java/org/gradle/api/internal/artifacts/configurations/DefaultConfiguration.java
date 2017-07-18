@@ -161,6 +161,7 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
     private final Object resolutionLock = new Object();
     private InternalState resolvedState = UNRESOLVED;
     private boolean insideBeforeResolve;
+    private boolean preResolved;
 
     private ResolverResults cachedResolverResults;
     private boolean dependenciesModified;
@@ -489,14 +490,18 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
     }
 
     private void performPreResolveActions(ResolvableDependencies incoming) {
-        DependencyResolutionListener dependencyResolutionListener = dependencyResolutionListeners.getSource();
-        insideBeforeResolve = true;
-        try {
-            dependencyResolutionListener.beforeResolve(incoming);
-        } finally {
-            insideBeforeResolve = false;
+        if (!preResolved) {
+            DependencyResolutionListener dependencyResolutionListener = dependencyResolutionListeners.getSource();
+            insideBeforeResolve = true;
+            try {
+                dependencyResolutionListener.beforeResolve(incoming);
+            } finally {
+                insideBeforeResolve = false;
+            }
+            triggerWhenEmptyActionsIfNecessary();
+
+            preResolved = true;
         }
-        triggerWhenEmptyActionsIfNecessary();
     }
 
     private void markReferencedProjectConfigurationsObserved(final InternalState requestedState) {
@@ -597,6 +602,11 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
             outgoing.preventFromFurtherMutation();
             canBeMutated = false;
         }
+    }
+
+    @Override
+    public void preResolve() {
+        performPreResolveActions(getIncoming());
     }
 
     @Override
