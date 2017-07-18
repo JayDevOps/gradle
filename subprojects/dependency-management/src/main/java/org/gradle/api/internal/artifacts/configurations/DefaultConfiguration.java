@@ -994,6 +994,7 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
         }
 
         public DependencySet getDependencies() {
+            validateMutation(MutationType.DEPENDENCIES);
             return getAllDependencies();
         }
 
